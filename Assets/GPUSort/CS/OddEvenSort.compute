@@ -1,0 +1,48 @@
+﻿#pragma kernel CSMain
+#include "Assets/CgIncludes/ColorCollect.cginc" 
+
+RWTexture2D<float4> Output;
+Texture2D<float4> Read;
+int ScreenWidth;
+int Count;
+int Max;
+
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+	int index1D = id.y * ScreenWidth + id.x;
+	int index1Dn = index1D + 1;
+	uint2 id2 = uint2(index1Dn % ScreenWidth, index1Dn / ScreenWidth);
+
+	if(Count % 2 == 0 && index1D % 2 == 0){
+		float3 hsvCol;
+
+		hsvCol = rgb2hsv(Read[id.xy]);
+		float3 a = hsvCol;
+
+		hsvCol = rgb2hsv(Read[id2.xy]);
+		float3 b = hsvCol;
+
+		float3 _min = min(a, b);
+		float3 _max = max(a, b);
+		Output[id.xy] = float4(hsv2rgb(_min), 1);
+		Output[id2.xy] = float4(hsv2rgb(_max), 1);
+	}
+
+
+	if(Count % 2 == 1 && index1D % 2 == 1 && index1D != Max-1){
+		float3 hsvCol;
+
+		hsvCol = rgb2hsv(Read[id.xy]);
+		float3 a = hsvCol;
+
+		hsvCol = rgb2hsv(Read[id2.xy]);
+		float3 b = hsvCol;
+
+		float3 _min = min(a, b);
+		float3 _max = max(a, b);
+		Output[id.xy] = float4(hsv2rgb(_min), 1);
+		Output[id2.xy] = float4(hsv2rgb(_max), 1);
+	}
+}
